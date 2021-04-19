@@ -205,13 +205,14 @@ function getTs(pid) {
       return pbi_ppid;
     }
 
-function getRpid(pid) {
-  var RTLD_NEXT = Ref();
-  ObjC.bindFunction('responsibility_get_responsible_for_pid', ['int',['int', 'int *', 'int *', 'int *', 'string']]);
-  var rpid = $.dlsym(RTLD_NEXT, 'responsibility_get_responsible_for_pid');
-  console.log(rpid[0]);
-  return rpid;
-}
+// TODO
+//function getRpid(pid) {
+//  var RTLD_NEXT = Ref();
+//  ObjC.bindFunction('responsibility_get_responsible_for_pid', ['int',['int', 'int *', 'int *', 'int *', 'string']]);
+//  var rpid = $.dlsym(RTLD_NEXT, 'responsibility_get_responsible_for_pid');
+//  console.log(rpid[0]);
+//  return rpid;
+//}
 
 
 function createNodesDictionary() {
