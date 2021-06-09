@@ -12,5 +12,6 @@ I recently implemented the Responsible pid functionality, so processes can now s
 ![alt text](https://github.com/antman1p/JXA_Proc_Tree/blob/main/Screen%20Shot%202021-04-19%20at%205.12.57%20PM.png?raw)
 ## TODO:
 ~~1.  Get the `getRpid(pid)` function to work~~
+2.  Implement the rest of Jaron's true pid methods
 ## Special Thanks
 Thank you to my colleagues in Appsec for helping me figure out how to get around the struct issue!  JXA has a problem with structs.
