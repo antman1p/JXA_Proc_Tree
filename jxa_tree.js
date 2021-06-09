@@ -205,14 +205,30 @@ function getTs(pid) {
       return pbi_ppid;
     }
 
-// TODO
-//function getRpid(pid) {
-//  var RTLD_NEXT = Ref();
-//  ObjC.bindFunction('responsibility_get_responsible_for_pid', ['int',['int', 'int *', 'int *', 'int *', 'string']]);
-//  var rpid = $.dlsym(RTLD_NEXT, 'responsibility_get_responsible_for_pid');
-//  console.log(rpid[0]);
-//  return rpid;
-//}
+
+function getResponsiblePid(pid) {
+  var libquarPath = '/usr/lib/system/libquarantine.dylib'
+  const MAXPATHLEN = 1024;
+  var libquarHandle = Ref();
+  var responsiblePid = pid
+  var urpid = Ref()
+  var rpid = Ref()
+  var pathBuffer = $.malloc(MAXPATHLEN);
+  var pathLength = $.proc_pidpath(pid, pathBuffer, MAXPATHLEN);
+
+  // Get a handle to libquarantine.dylib
+  libquarHandle = $.dlopen(libquarPath, 2);
+
+  // Get a handle to the proc_pidinfo() function in libproc
+  $.dlsym(libquarHandle, 'responsibility_get_responsible_for_pid');
+
+  ObjC.bindFunction('responsibility_get_responsible_for_pid', ['int',['int', 'int *', 'int *', 'int *', 'string']]);
+
+  if ($.responsibility_get_responsible_for_pid(pid, urpid, rpid, pathLength, pathBuffer) == 0) {
+    responsiblePid =  rpid[0];
+  }
+  return responsiblePid
+}
 
 
 function createNodesDictionary() {
@@ -232,10 +248,12 @@ function createNodesDictionary() {
        else {
          ts ="";
        }
-       let ppid =getPpid(pidsArray[i]);
+       let ppid = getPpid(pidsArray[i]);
+       let rpid = getResponsiblePid(pidsArray[i])
        var node = {
          pid: pidsArray[i],
          ppid: ppid,
+         responsiblePid: rpid,
          name: procName,
          path: procPath,
          timestamp: ts,
@@ -258,8 +276,30 @@ function buildStandardTree(nodesPidDict) {
   return rootNode;
 }
 
+function buildTrueTree(nodesPidDict) {
+  for (let key in nodesPidDict) {
+    let rpid = nodesPidDict[key].responsiblePid;
+    let pid = nodesPidDict[key].pid;
+    let ppid = nodesPidDict[key].ppid;
+    if (nodesPidDict[rpid] && rpid != pid) {
+      nodesPidDict[rpid].children.push(nodesPidDict[key]);
+    }
+    else if (nodesPidDict[ppid]) {
+      nodesPidDict[ppid].children.push(nodesPidDict[key]);
+    }
+  }
+  let rootNode = nodesPidDict[1];
+  return rootNode;
+}
+
 function printTree(treetype) {
   var nodes = createNodesDictionary();
+  if (treetype == 'truetree') {
+    var rootNode = buildTrueTree(nodes);
+  }
+  else {
+    var rootNode = buildStandardTree(nodes);
+  }
   var rootNode = buildStandardTree(nodes);
   var output = JSON.stringify(rootNode, null, 2);
   return output;
